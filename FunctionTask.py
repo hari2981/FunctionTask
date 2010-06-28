@@ -1,6 +1,8 @@
 import cPickle as pickle
 import types
 
+#Define exceptions
+class FunctionTaskError(Exception):pass
 
 
 class FunctionTask():
@@ -12,14 +14,24 @@ class FunctionTask():
 	self.__globals_list = globals_list
 	self.__global_ref = global_ref
 
-    def serialize(self, func, args, **kwargs):       
+    def serialize(self, func, args, **kwargs):  
+
+	if not isinstance(func,types.FunctionType):
+	    raise TypeError("\nfunc should be FunctionType")
+
+	if not isinstance(args, tuple):
+    	    raise TypeError("\nArguments must specified in  tuple")
+        
+	for arg in args:
+	    if isinstance(arg, types.MethodType):
+                raise TypeError("\nArguments should not be instance type")
+
         self.__find_objects(func, args, **kwargs)	
+#	print "Dependent objects %s" % self.__objects 
 
-	print "Dependent objects %s" % self.__objects 
-
-	serialized = pickle.dumps((func, args, kwargs, self.__objects),
-			self.__pickle_proto)	
-	self.work(serialized)
+#	serialized = pickle.dumps((func, args, kwargs, self.__objects),
+#			self.__pickle_proto)	
+#	self.work(serialized)
 
     def work(self,serialized):
 	func, args, kwargs , objects = pickle.loads(serialized)
@@ -39,9 +51,6 @@ class FunctionTask():
            	name =  error.args[0].split('\'')[1::2][0]
 		object = self.get_item(name)
 	        self.__global_ref.__setitem__(name,object)
-	        
-		
-
 
 
     def get_item(self, name):
