@@ -41,7 +41,7 @@ class cases(unittest.TestCase):
         self.assertRaises(TypeError,self.F.serialize,(my_exec,(f.double,3)))	    
 	    
     def test_function(self):
-	"""function type should not be class instances """ 
+	"""function type should not be class instance method """ 
 	f = fun()   
 	self.assertRaises(TypeError,self.F.serialize,(f.double,(2,)))
     

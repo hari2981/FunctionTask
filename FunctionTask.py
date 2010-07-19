@@ -7,12 +7,11 @@ class FunctionTaskError(Exception):pass
 
 class FunctionTask():
 
-    def __init__(self, globals_list, global_ref):
+    def __init__(self, globals_list):
         self.__pickle_proto = 0
 	self.__modules = []
 	self.__objects = {}
 	self.__globals_list = globals_list
-	self.__global_ref = global_ref
 
     def serialize(self, func, args, **kwargs):  
 
@@ -23,19 +22,20 @@ class FunctionTask():
     	    raise TypeError("\nArguments must specified in  tuple")
         
 	for arg in args:
-	    if isinstance(arg, types.MethodType):
+	    if isinstance(arg, types.MethodType) and \
+	    	isinstance(arg, types.InstanceType) :
                 raise TypeError("\nArguments should not be instance type")
 
         self.__find_objects(func, args, **kwargs)	
 #	print "Dependent objects %s" % self.__objects 
 
-#	serialized = pickle.dumps((func, args, kwargs, self.__objects),
-#			self.__pickle_proto)	
-#	self.work(serialized)
+	serialized = pickle.dumps((func, args, kwargs, self.__objects),
+			self.__pickle_proto)	
+	return serialized
 
     def work(self,serialized):
 	func, args, kwargs , objects = pickle.loads(serialized)
-#       func(*args, **kwargs) 	
+        func(*args, **kwargs) 	
 
 		
 
