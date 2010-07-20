@@ -1,4 +1,4 @@
-from FunctionClient import FunctionClient
+from pydra.cluster.tasks.function.FunctionClient import FunctionClient
 import math
 
 

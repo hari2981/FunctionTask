@@ -1,17 +1,22 @@
 import cPickle as pickle
 import types
+from pydra.cluster.tasks import Task
+import logging
+logger = logging.getLogger('root')
+logger.setLevel(logging.DEBUG)
 
 #Define exceptions
 class FunctionTaskError(Exception):pass
 
 
-class FunctionTask():
+class FunctionTask(Task):
 
-    def __init__(self, globals_list):
+    def __init__(self, globals_list=[]):
         self.__pickle_proto = 0
 	self.__modules = []
 	self.__objects = {}
 	self.__globals_list = globals_list
+	Task.__init__(self,"FunctionTask")
 
     def serialize(self, func, args, **kwargs):  
 
@@ -33,9 +38,17 @@ class FunctionTask():
 			self.__pickle_proto)	
 	return serialized
 
-    def work(self,serialized):
-	func, args, kwargs , objects = pickle.loads(serialized)
-        func(*args, **kwargs) 	
+    def work(self,**dict):
+	serialized = dict['s']
+        self.logger.debug('In Function %s' % serialized)	
+	try :
+	    func, args, kwargs , objects = pickle.loads(serialized)
+	except AttributeError as inst:
+            self.logger.debug('In Exception %s', inst.args)	
+
+	
+ #       func(*args, **kwargs) 
+        return serialized	    
 
 		
 
@@ -71,3 +84,19 @@ class FunctionTask():
 
 	            return item	
 		               
+    def progress(self):
+        """
+        returns progress as a number between 0 and 100
+        """
+        pass
+
+    def progressMessage(self):
+        """
+        Returns the status as a string
+        """
+	pass
+    def _reset(self):
+        """
+        Reset the task - set the counter back to zero
+        """
+	pass
