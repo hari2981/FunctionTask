@@ -17,17 +17,17 @@ class FunctionClient(WebController):
 				      )
 	
     def __getattribute__(self,key):
-	if key in ('run','result','task_id'):    
+	if key in ('run','result','task_id','F'):    
     	    return object.__getattribute__(self,key)	  
 	return super(FunctionClient,self).__getattribute__(key)    
 
     def run(self, func, args, **kwargs):
-#	serialized = self.F.serialize(func,args,**kwargs)
+	serialized = self.F.serialize(func,args,**kwargs)
 	try:
-#	    self.pydra_controller.queue_task('task.FunctionTask.FunctionTask', \
-#			    {'s':serialized}) 
-	    task_instance = self.queue_task('demo.demo_task.TestTask', \
-			    {'start':5}) 
+	    task_instance = self.queue_task('task.FunctionTask.FunctionTask', \
+			    {'s':serialized}) 
+#	    task_instance = self.queue_task('demo.demo_task.TestTask', \
+#			    {'start':5}) 
 	    self.task_id = task_instance['instance_id']
 
         except ControllerException, e:

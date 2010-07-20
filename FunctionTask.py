@@ -40,15 +40,18 @@ class FunctionTask(Task):
 
     def work(self,**dict):
 	serialized = dict['s']
-        self.logger.debug('In Function %s' % serialized)	
+
 	try :
 	    func, args, kwargs , objects = pickle.loads(serialized)
 	except AttributeError as inst:
             self.logger.debug('In Exception %s', inst.args)	
+            return {'start':inst.args}	    
+
+        self.logger.debug('Helo Function %s' % serialized)	
 
 	
  #       func(*args, **kwargs) 
-        return serialized	    
+        return {'start':5}	    
 
 		
 
