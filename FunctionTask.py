@@ -1,4 +1,5 @@
 import cPickle as pickle
+import inspect
 import types
 from pydra.cluster.tasks import Task
 import logging
@@ -11,11 +12,10 @@ class FunctionTaskError(Exception):pass
 
 class FunctionTask(Task):
 
-    def __init__(self, globals_list=[]):
+    def __init__(self):
         self.__pickle_proto = 0
 	self.__modules = []
 	self.__objects = {}
-	self.__globals_list = globals_list
 	Task.__init__(self,"FunctionTask")
 
     def serialize(self, func, args, **kwargs):  
@@ -31,75 +31,42 @@ class FunctionTask(Task):
 	    	isinstance(arg, types.InstanceType) :
                 raise TypeError("\nArguments should not be instance type")
 
-        self.__find_objects(func, args, **kwargs)	
-#	print "Dependent objects %s" % self.__objects 
+        serialized = self.__dump_funcs((func, ), args, **kwargs)	
 
-	serialized = pickle.dumps((func, args, kwargs, self.__objects),
-			self.__pickle_proto)	
 	return serialized
 
     def work(self,**dict):
 	serialized = dict['s']
+	fname, fsources, args, kwargs = pickle.loads(serialized)
+	fobjs = [compile(fsource, '<string>', 'exec') for fsource in fsources]
 
-	try :
-	    func, args, kwargs , objects = pickle.loads(serialized)
-	except AttributeError as inst:
-            self.logger.debug('In Exception %s', inst.args)	
-            return {'start':inst.args}	    
+	for fobj in fobjs:
+	    try:
+	        eval(fobj)
+	    except:
+                return {'start':"failed"}	    
 
-        self.logger.debug('Helo Function %s' % serialized)	
 
-	
- #       func(*args, **kwargs) 
-        return {'start':5}	    
+        __f = locals()[fname]
+	try:
+	    __result = __f(*args,**kwargs)
+	except:
+	    pass
 
-		
+        return {'start':__result}	    
 
-    def __find_objects(self,func, args,**kwargs):
-	"""Create a dict by extracting from globals and locals
+    def __dump_funcs(self,funcs, args,**kwargs):
+	"""Dumps the function and arguments
 	
 	"""
-    	while 1:                                                        
-            try :                                                      
-   	        func(*args, **kwargs)                                       
-	   	break                                                  
-	    except NameError as error:
-           	name =  error.args[0].split('\'')[1::2][0]
-		object = self.get_item(name)
-	        self.__global_ref.__setitem__(name,object)
-
-
-    def get_item(self, name):
-	for dict in self.__globals_list:
-	    for key, item in dict.items():
-
-		if name == key:
-
-		    if not isinstance(item,types.ModuleType): 
-	            	self.__objects.__setitem__(name,item)
-		    else :
-		        index = item.__name__.rfind('.')
-
-			if index != -1:
-			    self.__objects.__setitem__(name,item.__name__[:index])
-			else :
-			    self.__objects.__setitem__(name,item.__name__)	
-
-	            return item	
-		               
-    def progress(self):
-        """
-        returns progress as a number between 0 and 100
-        """
-        pass
-
-    def progressMessage(self):
-        """
-        Returns the status as a string
-        """
-	pass
-    def _reset(self):
-        """
-        Reset the task - set the counter back to zero
-        """
-	pass
+	sources = [self.__get_source(func) for func in funcs]
+	return pickle.dumps((funcs[0].func_name,sources,args,kwargs) , \
+			self.__pickle_proto)
+   		   
+    def __get_source(self, func):
+        """Fetches source of the function"""
+        #get lines of the source and adjust indent
+        sourcelines = inspect.getsourcelines(func)[0]
+        #remove indentation from the first line
+        sourcelines[0] = sourcelines[0].lstrip()
+        return "".join(sourcelines)

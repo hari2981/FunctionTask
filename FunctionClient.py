@@ -7,8 +7,7 @@ class FunctionClient(WebController):
     """
     Controller for interacting with functions
     """
-    def __init__(self,globals_list):
-	self.F = FunctionTask(globals_list)
+    def __init__(self):
 	settings = load_settings()
         super(FunctionClient,self).__init__(
 			                settings.HOST, \
@@ -22,12 +21,11 @@ class FunctionClient(WebController):
 	return super(FunctionClient,self).__getattribute__(key)    
 
     def run(self, func, args, **kwargs):
-	serialized = self.F.serialize(func,args,**kwargs)
+	F = FunctionTask()
+	serialized = F.serialize(func,args,**kwargs)
 	try:
 	    task_instance = self.queue_task('task.FunctionTask.FunctionTask', \
 			    {'s':serialized}) 
-#	    task_instance = self.queue_task('demo.demo_task.TestTask', \
-#			    {'start':5}) 
 	    self.task_id = task_instance['instance_id']
 
         except ControllerException, e:

@@ -9,9 +9,7 @@ def foo1(x,y):
 	return x * y
 
 
-l = locals().copy()
-g = globals().copy()	
-
-F = FunctionClient([l,g])
-F.run(foo,(5,), n = 2)
+F = FunctionClient()
+a = 5	
+F.run(foo,(a,), n = 3)
 print F.result()	
